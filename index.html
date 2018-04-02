@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>New HMTL document by NewJect</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script type="text/javascript">
+        var baseDate = new Date();
+        /*var timeBreaks = [
+            {
+                "time": baseDate.setMinutes(baseDate.getMinutes + 1)
+            }, {
+                "time": baseDate.setMinutes(baseDate.getMinutes + 2)
+                , "transition": true
+            }
+            , {
+                "time": baseDate.setMinutes(baseDate.getMinutes + 3)
+            }, {
+                "time": baseDate.setMinutes(baseDate.getMinutes + 4)
+                , "transition": true
+            }
+            , {
+                "time": baseDate.setMinutes(baseDate.getMinutes + 5)
+            }
+        ]*/
+        var staringPosition = {
+            zone: 1
+            , stop: 2
+        };
+        $("document").ready(function () {
+            //Your code here
+            $("#group_id").html("Group 1");
+            updateMessage();
+            //setInterval(updateMessage, 1000);
+        });
+
+        function getNextMove() {
+            getCurrentSequence();
+        }
+
+        function updateMessage() {
+            //var nextMove = new Date("March 30, 2018 15:36:00").getTime();
+            var nextMove = timeBreaks[getCurrentSequence()];
+            //console.log(nextMove);
+            var now = new Date().getTime();
+            var countdown = nextMove - now;
+            $("#message").html(formatCountdown(countdown));
+        }
+
+        function formatCountdown(time) {
+            if (time > 1) {
+                var minutes = Math.floor((time % (1000 * 60 * 60)) / (1000 * 60));
+                var seconds = Math.floor((time % (1000 * 60)) / 1000);
+                console.log(seconds.toString.length);
+                if (seconds < 10) {
+                    seconds = "0" + seconds;
+                }
+                return `You have ${minutes}:${seconds} until you move.`;
+            }
+            else {
+                return "Time to move to " + calculateCurrentPosition(staringPosition);
+            }
+        }
+
+        function calculateCurrentPosition(startingPosition) {
+            var currentSequence = getCurrentSequence();
+            var origZone = startingPosition.zone;
+            var origStop = startingPosition.stop;
+            var currentZone = startingPosition.zone + Math.floor(currentSequence / 3);
+            var currentStop = (origStop + currentSequence) % 3 || 3;
+            return `Zone ${currentZone} Stop:${currentStop}`;
+        }
+
+        function getCurrentSequence(includeTransition) {
+            var current = 0;
+            var now = new Date().getTime();
+            for (i in timeBreaks) {
+                var timebreak;
+                if (includeTransition) {
+                    timebreak = timeBreaks[i].time > now;
+                }
+                else {
+                    timebreak = timeBreaks[i].transition && timeBreaks[i] > now;
+                }
+                if (timebreak) {
+                    current = i;
+                    break;
+                }
+            }
+            console.log("Current", current ? current : "done");
+            return current;
+        }
+    </script>
+</head>
+
+<body>
+    <div>
+        <h1 id="group_id"></h1>
+        <p id="message"></p>
+    </div>
+</body>
+
+</html>
