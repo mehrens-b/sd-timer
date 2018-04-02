@@ -8,51 +8,82 @@
     <meta name="description" content="">
     <meta name="author" content="">
     <title>New HMTL document by NewJect</title>
-    <!--
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
--->
-    <link href="css/bootstrap/bootstrap.css" rel="stylesheet">
-    <script src="js/jquery-3.2.1.js"></script>
+    <!--<link href="css/bootstrap/bootstrap.css" rel="stylesheet">
+    <script src="js/jquery-3.2.1.js"></script>-->
     <script type="text/javascript">
         var baseDate = new Date();
         //Set Base Date to 5 Minutes 30 seconds ago to simulate already in process
-        baseDate.setMinutes(baseDate.getMinutes() - 7);
-        baseDate.setSeconds(baseDate.getSeconds() - 30);
+        baseDate.setMinutes(baseDate.getMinutes());
+        baseDate.setSeconds(baseDate.getSeconds());
         //Setup Dummy Schedule just to test tims
         var schedule = [];
+        var position = 1;
         for (let i = 0; i < 10; i++) {
             if (i % 2) {
                 schedule.push({
                     time: new Date(baseDate.setMinutes(baseDate.getMinutes() + 1))
+                    , position: position++
                 })
             }
             else {
                 schedule.push({
                     time: new Date(baseDate.setMinutes(baseDate.getMinutes() + 1))
-                    , transition: true
+                    , position: "transition"
                 })
             }
         }
-        //END Setup Dummy Schedule
-        /*var timeBreaks = [
+        var schedule = [
                 {
-                    "time": baseDate.setMinutes(baseDate.getMinutes + 1)
-                }, {
-                    "time": baseDate.setMinutes(baseDate.getMinutes + 2)
-                    , "transition": true
+                    time: new Date("Apr 2 2018 11:30:00")
+                    , position: 0
                 }
                 , {
-                    "time": baseDate.setMinutes(baseDate.getMinutes + 3)
-                }, {
-                    "time": baseDate.setMinutes(baseDate.getMinutes + 4)
-                    , "transition": true
+                    time: new Date("Apr 2 2018 11:42:00")
+                    , position: "transition"
                 }
                 , {
-                    "time": baseDate.setMinutes(baseDate.getMinutes + 5)
+                    time: new Date("Apr 2 2018 11:43:00")
+                    , position: 1
                 }
-            ]*/
-        var staringPosition = {
+                , {
+                    time: new Date("Apr 2 2018 11:44:00")
+                    , position: "transition"
+                }
+                , {
+                    time: new Date("Apr 2 2018 11:45:00")
+                    , position: 2
+                }
+                , {
+                    time: new Date("Apr 2 2018 11:46:00")
+                    , position: "transition"
+                }, {
+                    time: new Date("Apr 2 2018 11:47:00")
+                    , position: 3
+                }
+
+
+        ]
+            //END Setup Dummy Schedule
+            /*var timeBreaks = [
+                    {
+                        "time": baseDate.setMinutes(baseDate.getMinutes + 1)
+                    }, {
+                        "time": baseDate.setMinutes(baseDate.getMinutes + 2)
+                        , "transition": true
+                    }
+                    , {
+                        "time": baseDate.setMinutes(baseDate.getMinutes + 3)
+                    }, {
+                        "time": baseDate.setMinutes(baseDate.getMinutes + 4)
+                        , "transition": true
+                    }
+                    , {
+                        "time": baseDate.setMinutes(baseDate.getMinutes + 5)
+                    }
+                ]*/
+        var startingPosition = {
             zone: 1
             , stop: 1
         };
@@ -82,17 +113,26 @@
         }
 
         function updateMessage() {
-            //Check to see if we are in a transition
-            if (schedule[getCurrentLocation()].transition) {
-                $("#message").html(formatCountdown(0));
+            try {
+                //Check to see if we are in a transition
+                if (schedule[getCurrentLocation()].position == "transition") {
+                    $("#message").html(formatCountdown(0));
+                }
+                else {
+                    var nextMove = schedule[getCurrentLocation() + 1].time;
+                    var now = new Date().getTime();
+                    var countdown = nextMove - now;
+                    $("#message").html(formatCountdown(countdown));
+                }
             }
-            else {
-                //var nextMove = new Date("March 30, 2018 15:36:00").getTime();
-                var nextMove = schedule[getCurrentLocation() + 1];
-                //console.log(nextMove);
-                var now = new Date().getTime();
-                var countdown = nextMove.time - now;
-                $("#message").html(formatCountdown(countdown));
+            catch (err) {
+                console.log(err);
+                if (schedule[getCurrentLocation()] == -1) {
+                    $("#message").html("Done for the day");
+                }
+                else {
+                    $("#message").html("Error " + err);
+                }
             }
         }
 
@@ -104,20 +144,40 @@
                 if (seconds < 10) {
                     seconds = "0" + seconds;
                 }
-                return `You have ${minutes}:${seconds} until you move to ` + calculateCurrentPosition(staringPosition);
+                return `You have ${minutes}:${seconds} until you move to ` + calculateCurrentPosition(startingPosition);
             }
             else {
-                return "Time to move to " + calculateCurrentPosition(staringPosition);
+                return "Time to move to " + calculateNextPosition(startingPosition);
             }
         }
 
-        function calculateCurrentPosition(startingPosition) {
-            var currentSequence = Math.floor(getCurrentLocation() / 2) + 1;
+        function calculateNextPosition(staringPosition) {
+            var next = schedule[getCurrentLocation() + 1].position;
             var origZone = startingPosition.zone;
             var origStop = startingPosition.stop;
-            var currentZone = startingPosition.zone + Math.floor(currentSequence / 3);
-            var currentStop = (origStop + currentSequence) % 3 || 3;
-            return `Zone: ${currentZone} Stop:${currentStop}.  Arrive by: ${schedule[currentSequence].time.getHours()}:${schedule[currentSequence].time.getMinutes()}`;
+            var nextZone = startingPosition.zone + Math.floor(next / 3);
+            var nextStop = (origStop + next) % 3 || 3;
+            return `Zone: ${nextZone} Stop:${nextStop}. Arrive by: ${schedule[getCurrentLocation() + 1].time.getHours()}:${schedule[getCurrentLocation() + 1].time.getMinutes()}`;
+        }
+
+        function calculateCurrentPosition(startingPosition) {
+            try {
+                var currentSequence = schedule[getCurrentLocation()].position;
+                //Switch on position transition
+                if (currentSequence == "transition") {
+                    return schedule[currentSequence + 1];
+                }
+                else {
+                    var origZone = startingPosition.zone;
+                    var origStop = startingPosition.stop;
+                    var currentZone = startingPosition.zone + Math.floor(currentSequence / 3);
+                    var currentStop = (origStop + currentSequence) % 3 || 3;
+                    return `Zone: ${currentZone} Stop:${currentStop}. Arrive by: ${schedule[currentSequence].time.getHours()}:${schedule[currentSequence].time.getMinutes()}`;
+                }
+            }
+            catch (err) {
+                return "Done or broken"
+            }
         }
         /*
 
